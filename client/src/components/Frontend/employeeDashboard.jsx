@@ -25,7 +25,7 @@ function EmployeeDashboard() {
 
     const fetchCount = async (username) => {
 
-        fetch("http://localhost:5000/api/capturedUser", {
+        fetch(`${import.meta.env.VITE_API_URL}/api/capturedUser`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -41,7 +41,7 @@ function EmployeeDashboard() {
 
     const fetchUser = async (username) => {
 
-        fetch("http://localhost:5000/api/userExist", {
+        fetch(`${import.meta.env.VITE_API_URL}/api/userExist`, {
 
             method: "POST",
 
@@ -66,7 +66,7 @@ function EmployeeDashboard() {
     const fetchUserEmails = async () => {
         if (!user?.name) return;
 
-        fetch("http://localhost:5000/api/fetchEmail", {
+        fetch(`${import.meta.env.VITE_API_URL}/api/fetchEmail`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"

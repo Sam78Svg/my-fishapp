@@ -33,6 +33,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 //Api Route
+app.get('/', (req, res) => {
+    res.send("Hello from PhishAware API ==> Deploy live 🎉");
+});
 app.use("/api", camCreationRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api', reportCreationRoutes);

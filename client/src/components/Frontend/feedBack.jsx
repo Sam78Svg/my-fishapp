@@ -11,7 +11,7 @@ function FeedBack() {
         e.preventDefault();
         // Simulate credential capture
         setBreached(true);
-        await fetch("http://localhost:5000/api/capture", {
+        await fetch(`${import.meta.env.VITE_API_URL}/api/capture`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
