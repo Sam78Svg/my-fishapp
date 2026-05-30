@@ -24,7 +24,12 @@ process.on('uncaughtException', (err) => {
 
 //MiddleWares
 const app = express();
-app.use(cors());
+import cors from "cors";
+
+app.use(cors({
+    origin: "https://my-fishapp.vercel.app/",
+    credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
