@@ -26,7 +26,7 @@ process.on('uncaughtException', (err) => {
 const app = express();
 
 app.use(cors({
-    origin: "https://my-fishapp.vercel.app/",
+    origin: "https://my-fishapp.vercel.app",
     credentials: true
 }));
 app.use(express.json());
