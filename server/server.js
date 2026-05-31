@@ -26,7 +26,19 @@ process.on('uncaughtException', (err) => {
 const app = express();
 
 app.use(cors({
-    origin: "https://my-fishapp.vercel.app",
+    origin: function (origin, callback) {
+
+        if (
+            !origin ||
+            origin.includes("vercel.app") ||
+            origin.includes("localhost")
+        ) {
+            callback(null, true);
+        } else {
+            callback(new Error("Not allowed by CORS"));
+        }
+
+    },
     credentials: true
 }));
 app.use(express.json());
