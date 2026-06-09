@@ -58,4 +58,136 @@ router.delete('/clear_reports', async (req, res) => {
     }
 });
 
+// Capture credentials endpoint
+router.post("/capture", async (req, res) => {
+    const { username, password } = req.body;
+    console.log(`Capture attempt for user: ${username}`);
+    try {
+
+        // ================= FIND USER =================
+        const [rows] = await dbConfig.execute(
+            "SELECT * FROM users WHERE name = ?",
+            [username]
+        );
+
+        if (rows.length === 0) {
+
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+
+        // IMPORTANT
+        // define user BEFORE using it
+        const user = rows[0];
+
+        // ================= GET LATEST CAMPAIGN =================
+        const [latestCampaign] = await dbConfig.execute(
+            `
+            SELECT * 
+            FROM campaigns 
+            WHERE target_group = ?
+            ORDER BY created_at DESC
+            LIMIT 1
+            `,
+            [user.department]
+        );
+
+        if (latestCampaign.length === 0) {
+
+            return res.status(404).json({
+                success: false,
+                message: "No active campaign found"
+            });
+        }
+
+        const campaign = latestCampaign[0];
+
+        // ================= UPDATE CAMPAIGN CLICK COUNT =================
+        await dbConfig.execute(
+            `
+            UPDATE campaigns
+            SET clicked = clicked + 1
+            WHERE id = ?
+            `,
+            [campaign.id]
+        );
+
+        // ================= SAVE TRACKING =================
+        await dbConfig.execute(
+            `
+            INSERT INTO tracking
+            (username, email, clicked, submitted, campaign_name)
+            VALUES (?, ?, ?, ?, ?)
+            `,
+            [username, user.email, true, true, campaign.name]
+        );
+
+        return res.status(200).json({
+            success: true,
+            message: "Credentials captured"
+        });
+
+    } catch (err) {
+
+        console.error("CAPTURE ERROR:", err);
+
+        return res.status(500).json({
+            success: false,
+            message: "Database error"
+        });
+    }
+});
+
+// emloyee Data 
+router.post('/userExist', async (req, res) => {
+
+    const { username } = req.body;
+    console.log(req.body);
+    console.log(username);
+
+    try {
+
+        const [getUser] = await dbConfig.execute(
+            'SELECT * FROM users WHERE name=?',
+            [username]
+        );
+
+
+        if (getUser.length > 0) {
+            return res.status(200).json({
+                success: true,
+                user: getUser[0]
+            });
+        }
+
+        const [getAdmin] = await dbConfig.execute(
+            'SELECT * FROM admins WHERE username=?',
+            [username]
+        );
+
+        if (getAdmin.length > 0) {
+            console.log("Admin found:", getAdmin[0]);
+            return res.status(200).json({
+                success: true,
+                user: getAdmin[0]
+            });
+        }
+
+        return res.status(404).json({
+            success: false,
+            message: "User not found"
+        });
+
+    } catch (err) {
+
+        console.error(err);
+
+        res.status(500).json({
+            message: "db error"
+        });
+    }
+});
+
 export default router;
