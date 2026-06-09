@@ -48,22 +48,26 @@ router.post('/login', async (req, res) => {
     if (!username || !password)
         return res.json({ success: false, message: "All fields required" });
 
-    const usernameClean = username.trim().toLowerCase();
-
     try {
         // ===== try admin login =====
         const [admins] = await dbConfig.execute(
             "SELECT * FROM admins WHERE username=?",
-            [usernameClean]
+            [username]
         );
 
-        if (admins.length > 0) {
-            const admin = admins[0];
+        if (admins.length === 0) {
+            return res.json({ success: false, message: "Invalid credentials" });
             console.log(admin);
+        }
 
-            if (!usernameClean)
-                return res.json({ success: false, message: "Invalid credentials" });
+        const admin = admins[0];
 
+        const adminMatch = await bcrypt.compare(
+            password,
+            admin.password
+        );
+
+        if (adminMatch) {
             return res.json({
                 success: true,
                 type: "admin",
