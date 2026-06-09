@@ -1,0 +1,116 @@
+================================================================================
+                        PHISHAWARE - PROJECT DOCUMENTATION
+================================================================================
+
+Project Name: PhishAware
+Project Type: Full-Stack Web Application
+Main Objective: A Phishing Awareness Training Platform for organizations to 
+                simulate phishing attacks and train employees.
+
+================================================================================
+1. DIRECTORY STRUCTURE
+================================================================================
+
+my-fishapp/
+├── client/                     # Frontend - React (Vite)
+│   ├── public/                 # Static assets
+│   ├── src/
+│   │   ├── components/         # React Components
+│   │   │   ├── Frontend/       # UI Pages (Home, Login, Dashboards)
+│   │   │   ├── Resource/       # Shared resources
+│   │   │   └── Styling/        # CSS files
+│   │   ├── seo/                # SEO Configuration
+│   │   ├── App.jsx             # Main Application Routing
+│   │   ├── App.css             # Global Styles
+│   │   └── main.jsx            # Entry point
+│   ├── package.json            # Frontend dependencies
+│   └── vite.config.js          # Vite configuration
+│
+├── server/                     # Backend - Node.js (Express)
+│   ├── API/                    # API Endpoints
+│   │   ├── authApi.js          # Authentication (Login/JWT)
+│   │   ├── campaignCreationApi.js # Campaign Management
+│   │   ├── reportCreationApi.js   # Analytics & Reporting
+│   │   └── sendCampaignApi.js     # Email Dispatch Logic
+│   ├── utils/                  # Helper Utilities (Messaging, etc.)
+│   ├── db.js                   # Database Connection (MySQL)
+│   ├── server.js               # Express Server Setup
+│   └── package.json            # Backend dependencies
+│
+└── database/                   # Database related scripts/backups
+
+================================================================================
+2. KEY FEATURES
+================================================================================
+
+- Admin Dashboard:
+  - Create and manage phishing simulation campaigns.
+  - View real-time reports on employee interactions (clicks, credential entry).
+  - Track department-wise performance metrics.
+
+- Employee Dashboard:
+  - View assigned awareness training modules.
+  - Submit feedback on training materials.
+
+- AI ChatBot (Gemini):
+  - Integrated AI assistant to help users with security-related queries.
+  - Powered by Google Gemini API.
+
+- Phishing Simulation:
+  - Ability to send mock phishing emails to employees.
+  - Credential capture mechanism for training purposes (simulated).
+
+================================================================================
+3. TECHNOLOGY STACK
+================================================================================
+
+FRONTEND:
+- Framework: React 19
+- Build Tool: Vite
+- Routing: React Router DOM
+- Styling: Bootstrap & Custom CSS
+- Deployment: Vercel
+
+BACKEND:
+- Runtime: Node.js
+- Framework: Express.js
+- Database: MySQL
+- AI Integration: Google Generative AI (Gemini)
+- Emailing: Nodemailer
+- Authentication: JWT & Bcryptjs
+
+================================================================================
+4. SETUP & INSTALLATION
+================================================================================
+
+Prerequisites:
+- Node.js installed
+- MySQL Database installed and running
+
+Installation Steps:
+
+1. Clone the repository
+2. Backend Setup:
+   - Navigate to the `server` folder: `cd server`
+   - Install dependencies: `npm install`
+   - Configure `.env` file with DB credentials and Gemini API Key.
+   - Start the server: `npm start` (or `node server.js`)
+
+3. Frontend Setup:
+   - Navigate to the `client` folder: `cd client`
+   - Install dependencies: `npm install`
+   - Start development server: `npm run dev`
+
+================================================================================
+5. API ROUTES (Summary)
+================================================================================
+
+- GET  /api/                - Health check
+- POST /api/auth/login      - User authentication
+- POST /api/capture         - Capture simulation data
+- POST /api/campaigns       - Create new campaign
+- GET  /api/reports         - Fetch analytics data
+
+================================================================================
+DOCUMENTATION END
+================================================================================
