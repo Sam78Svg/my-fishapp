@@ -43,65 +43,71 @@ router.post('/signup', async (req, res) => {
 
 // Login endpoint (supports both employee & admin)
 router.post('/login', async (req, res) => {
-    let { username, password } = req.body;
+    const { username, password } = req.body;
 
-    if (!username || !password)
-        return res.json({ success: false, message: "All fields required" });
+    if (!username || !password) {
+        return res.json({
+            success: false,
+            message: "All fields required"
+        });
+    }
 
     try {
-        // ===== try admin login =====
+
+        // ===== ADMIN LOGIN =====
         const [admins] = await dbConfig.execute(
             "SELECT * FROM admins WHERE username=?",
             [username]
         );
 
-        if (admins.length === 0) {
-            return res.json({ success: false, message: "Invalid credentials" });
-            console.log(admin);
+        if (admins.length > 0) {
+
+            const admin = admins[0];
+
+            const adminMatch = await bcrypt.compare(
+                password,
+                admin.password
+            );
+
+            if (adminMatch) {
+                return res.json({
+                    success: true,
+                    type: "admin",
+                    username: admin.username,
+                    role: admin.role,
+                    company_name: admin.company_name
+                });
+            }
         }
 
-        const admin = admins[0];
-
-        const adminMatch = await bcrypt.compare(
-            password,
-            admin.password
-        );
-
-        if (adminMatch) {
-            return res.json({
-                success: true,
-                type: "admin",
-                username: admin.username,
-                role: admin.role
-            });
-        }
-
-        // ===== try employee login (using email as username) =====
+        // ===== EMPLOYEE LOGIN =====
         const [employees] = await dbConfig.execute(
             "SELECT * FROM users WHERE name=?",
             [username]
         );
 
-        if (employees.length === 0)
+        if (employees.length === 0) {
             return res.json({
                 success: false,
                 message: "Invalid credentials"
             });
+        }
 
         const employee = employees[0];
 
-        const match = await bcrypt.compare(
+        const employeeMatch = await bcrypt.compare(
             password,
             employee.password
         );
 
-        if (!match)
+        if (!employeeMatch) {
             return res.json({
                 success: false,
                 message: "Invalid credentials"
             });
+        }
 
-        res.json({
+        return res.json({
             success: true,
             type: "employee",
             name: employee.name,
@@ -110,9 +116,15 @@ router.post('/login', async (req, res) => {
             designation: employee.designation,
             company_name: employee.company_name
         });
+
     } catch (err) {
         console.error(err);
-        res.json({ success: false, message: "Database error" });
+        return res.json({
+            success: false,
+            message: "Database error"
+        });
     }
+
 });
+
 export default router;
