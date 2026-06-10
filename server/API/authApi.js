@@ -63,6 +63,7 @@ router.post('/login', async (req, res) => {
         if (admins.length > 0) {
 
             const admin = admins[0];
+            console.log("Admin found:", admin);
 
             const adminMatch = await bcrypt.compare(
                 password,
@@ -78,6 +79,12 @@ router.post('/login', async (req, res) => {
                     company_name: admin.company_name
                 });
             }
+            else {
+                return res.json({
+                    success: false,
+                    message: "Invalid credentials"
+                });
+            }
         }
 
         // ===== EMPLOYEE LOGIN =====
@@ -87,6 +94,7 @@ router.post('/login', async (req, res) => {
         );
 
         if (employees.length === 0) {
+            console.log("Employee not found");
             return res.json({
                 success: false,
                 message: "Invalid credentials"
@@ -94,7 +102,7 @@ router.post('/login', async (req, res) => {
         }
 
         const employee = employees[0];
-
+        console.log("Employee found:", employee);
         const employeeMatch = await bcrypt.compare(
             password,
             employee.password
