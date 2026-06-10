@@ -12,14 +12,14 @@ const transporter = nodemailer.createTransport({
     port: 587,
     secure: false,
     auth: {
-        user: import.meta.env.EMAIL_USER,
-        pass: import.meta.env.EMAIL_PASS
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
     }
 });
 
 async function sendEmail(recipients, link) {
     const mailOptions = {
-        from: import.meta.env.EMAIL_USER,
+        from: process.env.EMAIL_USER,
         to: recipients.join(','),
         subject: 'Phishing Simulation Link',
         text: `Please visit the following link: ${link}`
@@ -31,8 +31,8 @@ async function sendEmail(recipients, link) {
 let twilioClient = null;
 
 function getTwilioClient() {
-    const sid = import.meta.env.TWILIO_SID;
-    const token = import.meta.env.TWILIO_AUTH_TOKEN;
+    const sid = process.env.TWILIO_SID;
+    const token = process.env.TWILIO_AUTH_TOKEN;
     if (!sid || !token) {
         throw new Error('Twilio credentials are not configured in .env');
     }
@@ -50,7 +50,7 @@ async function sendSMS(recipients, link) {
         try {
             const msg = await client.messages.create({
                 body: `Please visit the following link: ${link}`,
-                from: import.meta.env.TWILIO_PHONE_NUMBER,
+                from: process.env.TWILIO_PHONE_NUMBER,
                 to: number
             });
 
