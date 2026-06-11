@@ -161,7 +161,7 @@ function AdminDashboard() {
         e.preventDefault();
 
         // Create unique link FIRST
-        const generatedLink = import.meta.env.LOCAL_API_URL + `/feedback/` + Date.now();
+        const generatedLink = `${import.meta.env.VITE_LOCAL_API_URL}/feedback/${Date.now()}`;
 
         try {
             // Save campaign
