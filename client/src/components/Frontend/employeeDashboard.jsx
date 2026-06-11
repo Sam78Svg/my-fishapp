@@ -313,7 +313,7 @@ function EmployeeDashboard() {
                                     </div>
 
                                     <div className="d-flex justify-content-between small">
-                                        <span>Awareness Score</span>
+                                        <span>Vulnerability Score</span>
                                         <strong>{percentage.toFixed(2)}%</strong>
                                     </div>
 

@@ -56,7 +56,7 @@ router.post('/login', async (req, res) => {
 
         // ===== ADMIN LOGIN =====
         const [admins] = await dbConfig.execute(
-            "SELECT * FROM admins WHERE username=?",
+            "SELECT * FROM admins WHERE LOWER(username)=LOWER(?)",
             [username]
         );
 
@@ -89,7 +89,7 @@ router.post('/login', async (req, res) => {
 
         // ===== EMPLOYEE LOGIN =====
         const [employees] = await dbConfig.execute(
-            "SELECT * FROM users WHERE name=?",
+            "SELECT * FROM users WHERE LOWER(name)=LOWER(?) Limit 1",
             [username]
         );
 

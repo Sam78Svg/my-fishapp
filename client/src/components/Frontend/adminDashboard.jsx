@@ -87,6 +87,7 @@ function AdminDashboard() {
         if (!selectedGroup) return;
 
         console.log("SELECTED GROUP:", selectedGroup);
+        console.log("PAGINATION DEBUG: Fetching recipients with", { selectedGroup, page, limit, userCompany: user?.company_name });
         fetch(
             `${import.meta.env.VITE_API_URL}/api/recipients?group=${encodeURIComponent(selectedGroup)}&company=${encodeURIComponent(user?.company_name || "")}&page=${page}&limit=${limit}`
         )
@@ -160,7 +161,7 @@ function AdminDashboard() {
         e.preventDefault();
 
         // Create unique link FIRST
-        const generatedLink = import.meta.env.VITE_API_URL + `/feedback/` + Date.now();
+        const generatedLink = import.meta.env.LOCAL_API_URL + `/feedback/` + Date.now();
 
         try {
             // Save campaign
@@ -242,7 +243,7 @@ function AdminDashboard() {
     const fetchReports = async () => {
         const res = await fetch(`${import.meta.env.VITE_API_URL}/api/reports`);
         const data = await res.json();
-        setReports(data.data || data);
+        setReports(Array.isArray(data.data) ? data.data : []);
     };
     const handleDeleteAllReports = async () => {
         if (!window.confirm("Are you sure you want to delete all reports? This action cannot be undone.")) {
@@ -903,35 +904,37 @@ function AdminDashboard() {
                             </thead>
 
                             <tbody>
-                                {reports.map((r, i) => (
-                                    <>
-                                        <tr key={i} style={{ borderBottomColor: "none" }}>
-                                            <td>{r.name}</td>
-                                            <td>{r.template_type}</td>
-                                            <td>{r.target_group}</td>
-                                            <td>{r.created_at}</td>
-                                            <td>
-                                                <button className="btn btn-sm btn-outline-primary" onClick={() => showReports(i)}>
-                                                    View
-                                                </button>
-                                            </td>
-                                        </tr>
-                                        <tr className="showReports" style={{ display: "none", borderBottom: "2px solid #333" }}>
-                                            <td colSpan={5}>
-                                                <div className="d-flex flex-wrap gap-3 py-2">
-                                                    <span><span className="text-primary">Emails sent:</span> {r.email_sent ?? 0}</span>
-                                                    <span><span className="text-danger">Clicked:</span> {r.clicked ?? 0}</span>
-                                                    <span><span className="text-success">Submitted credentials:</span> {r.reported ?? 0}</span>
-                                                    <span><span className="text-info">Vulnerability rate:</span>{" "}
-                                                        {r.email_sent > 0
-                                                            ? `${((Number(r.clicked) / Number(r.email_sent)) * 100).toFixed(2)}%`
-                                                            : "N/A"}
-                                                    </span>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    </>
-                                ))}
+                                {Array.isArray(reports) &&
+                                    reports.map((r, i) => (
+                                        <>
+                                            <tr key={i} style={{ borderBottomColor: "none" }}>
+                                                <td>{r.name}</td>
+                                                <td>{r.template_type}</td>
+                                                <td>{r.target_group}</td>
+                                                <td>{r.created_at}</td>
+                                                <td>
+                                                    <button className="btn btn-sm btn-outline-primary" onClick={() => showReports(i)}>
+                                                        View
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            <tr className="showReports" style={{ display: "none", borderBottom: "2px solid #333" }}>
+                                                <td colSpan={5}>
+                                                    <div className="d-flex flex-wrap gap-3 py-2">
+                                                        <span><span className="text-primary">Emails sent:</span> {r.email_sent ?? 0}</span>
+                                                        <span><span className="text-danger">Clicked:</span> {r.clicked ?? 0}</span>
+                                                        <span><span className="text-success">Submitted credentials:</span> {r.reported ?? 0}</span>
+                                                        <span><span className="text-info">Vulnerability rate:</span>{" "}
+                                                            {r.email_sent > 0
+                                                                ? `${((Number(r.clicked) / Number(r.email_sent)) * 100).toFixed(2)}%`
+                                                                : "N/A"}
+                                                        </span>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </>
+                                    ))
+                                }
                             </tbody>
                         </table>
                     </div>

@@ -1,8 +1,9 @@
 import bcrypt from 'bcryptjs';
-const hash = "$2b$10$sGwFFSk6Fxxq5YVDX.qjrOEId6En.WMyHoRJPyFUH0TtoUtHeGT0q"
+const hash = await bcrypt.hash("SangamKendre", 10);
 
+console.log("HASH:", hash);
 const match = await bcrypt.compare(
-    'zudio_admin1',
+    'SangamKendre',
     hash
 );
 

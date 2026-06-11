@@ -7,6 +7,9 @@ import twilio from 'twilio';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.join(__dirname, '..', '.env') });
 
+console.log("EMAIL_USER:", process.env.EMAIL_USER);
+console.log("EMAIL_PASS exists:", !!process.env.EMAIL_PASS);
+
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 587,

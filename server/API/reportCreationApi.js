@@ -66,7 +66,7 @@ router.post("/capture", async (req, res) => {
 
         // ================= FIND USER =================
         const [rows] = await dbConfig.execute(
-            "SELECT * FROM users WHERE name = ?",
+            "SELECT * FROM users WHERE LOWER(name) = LOWER(?)",
             [username]
         );
 
@@ -150,7 +150,7 @@ router.post('/userExist', async (req, res) => {
     try {
 
         const [getUser] = await dbConfig.execute(
-            'SELECT * FROM users WHERE name=?',
+            'SELECT * FROM users WHERE LOWER(name) = LOWER(?)',
             [username]
         );
 
@@ -163,7 +163,7 @@ router.post('/userExist', async (req, res) => {
         }
 
         const [getAdmin] = await dbConfig.execute(
-            'SELECT * FROM admins WHERE username=?',
+            'SELECT * FROM admins WHERE LOWER(username) = LOWER(?)',
             [username]
         );
 
