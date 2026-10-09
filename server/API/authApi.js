@@ -1,5 +1,5 @@
 import express from 'express';
-import dbConfig from '../db.js';
+import { selectRows, insertRow } from '../db.js';
 import bcrypt from 'bcryptjs';
 import { createAuthToken, authenticate, requireRole } from '../utils/auth.js';
 const router = express.Router();
@@ -20,20 +20,19 @@ router.post('/signup', async (req, res) => {
             if (!name || !email || !password)
                 return res.json({ success: false, message: "Name, email & password required" });
 
-            const [existing] = await dbConfig.execute(
-                "SELECT employee_id FROM users WHERE email=?",
-                [email]
-            );
+            const existing = await selectRows('employees', {
+                columns: 'employee_id', filters: { email, company_name }
+            });
 
             if (existing.length > 0)
                 return res.json({ success: false, message: "Employee already exists" });
 
             const hashed = await bcrypt.hash(password, 10);
 
-            await dbConfig.execute(
-                "INSERT INTO users (name, department, designation, email, joining_date, password, company_name) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                [name, department, designation, email, joining_date, hashed, company_name]
-            );
+            await insertRow('employees', {
+                name, department, designation, email, joining_date: joining_date || null,
+                password: hashed, company_name
+            });
 
             return res.json({ success: true });
         }
@@ -59,12 +58,13 @@ router.post('/login', async (req, res) => {
     try {
 
         // ===== ADMIN LOGIN =====
-        const [admins] = await dbConfig.execute(
-            "SELECT * FROM admins WHERE LOWER(username)=LOWER(?)",
-            [username]
-        );
+        const admins = await selectRows('admins', { filters: { username: { op: 'ilike', value: username } }, limit: 2 });
 
-        if (admins.length > 0) {
+        if (admins.length > 1) {
+            return res.json({ success: false, message: 'Invalid credentials' });
+        }
+
+        if (admins.length === 1) {
 
             const admin = admins[0];
 
@@ -92,12 +92,9 @@ router.post('/login', async (req, res) => {
         }
 
         // ===== EMPLOYEE LOGIN =====
-        const [employees] = await dbConfig.execute(
-            "SELECT * FROM users WHERE LOWER(name)=LOWER(?) Limit 1",
-            [username]
-        );
+        const employees = await selectRows('employees', { filters: { name: { op: 'ilike', value: username } }, limit: 2 });
 
-        if (employees.length === 0) {
+        if (employees.length !== 1) {
             return res.json({
                 success: false,
                 message: "Invalid credentials"

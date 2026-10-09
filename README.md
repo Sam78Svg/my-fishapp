@@ -189,12 +189,15 @@ npm install
 Create a `.env` file inside the `server` directory:
 
 ```env
-DB_HOST=
-DB_USER=
-DB_PASSWORD=
-DB_NAME=
+SUPABASE_URL=https://tjrqddgkkmxilklztnot.supabase.co
+SUPABASE_SECRET_KEY=
 
 AUTH_TOKEN_SECRET=replace-with-a-long-random-secret
+
+BOOTSTRAP_ADMIN_USERNAME=
+BOOTSTRAP_ADMIN_PASSWORD=
+BOOTSTRAP_ADMIN_COMPANY_NAME=FishApp
+BOOTSTRAP_ADMIN_EMAIL=
 
 EMAIL_USER=
 EMAIL_PASS=
@@ -208,7 +211,9 @@ GEMINI_API_KEY=
 
 Set `AUTH_TOKEN_SECRET` to a cryptographically random value in production and keep it stable across server instances. The API issues eight-hour bearer tokens after login; campaign and account-management endpoints require those tokens.
 
-Before deploying this version, run [`server/migrations/001_add_company_scope.sql`](server/migrations/001_add_company_scope.sql) once against the application database. It adds company ownership to campaigns, templates, links, and tracking, and backfills legacy records only when their company can be determined unambiguously.
+Keep `SUPABASE_SECRET_KEY` on the server only; never add it to a `VITE_` variable or frontend code. The connected Supabase project already has `campaigns.company_name`. The company-scope and feedback-page schema migration has been applied to the connected project. Its existing RLS settings deny direct client access; the server uses the secret key and enforces each user's company on every data endpoint.
+
+The connected Supabase project already contains an admin, employees, campaigns, templates, links, and tracking records. Those Supabase records are retained; MySQL records are not copied. The current admin belongs to `FishApp`. To provision an admin for another company, set the `BOOTSTRAP_ADMIN_*` values for that company in the server environment and run `npm run bootstrap-admin` from `server/`. Remove those bootstrap values after the command succeeds. The dashboard and API scope campaign data to the signed-in admin's company.
 
 ---
 

@@ -9,6 +9,7 @@ function AdminDashboard() {
     // CAMPAIGN CREATION STATES
     const [campaignName, setCampaignName] = useState("");
     const [emailTemplate, setEmailTemplate] = useState("");
+    const [feedbackPageType, setFeedbackPageType] = useState("generic");
     const [targetGroup, setTargetGroup] = useState("All Employees");
     const [successLink, setSuccessLink] = useState("");
     const [links, setLinks] = useState([]);
@@ -169,6 +170,7 @@ function AdminDashboard() {
                 body: JSON.stringify({
                     campaign_name: campaignName,
                     email_template: emailTemplate,
+                    feedback_page_type: feedbackPageType,
                     target_group: targetGroup,
                     company_name: user?.company_name || "",
                 })
@@ -383,7 +385,7 @@ function AdminDashboard() {
                 <button className="btn btn-dark w-100 mb-2" onClick={() => setActiveTab("reports")}>Reports</button>
 
                 <Link to="/gemini" className="btn btn-outline-light w-100 mt-4">Chat wit AI</Link>
-                <Link to="/login" className="btn btn-outline-light w-100 mt-4">Logout</Link>
+                <Link to="/login" className="btn btn-outline-light w-100 mt-4" onClick={() => localStorage.removeItem("user")}>Logout</Link>
             </div>
 
             {/* MAIN */}
@@ -418,12 +420,24 @@ function AdminDashboard() {
                                 </option>
 
                                 {templates.map(t => (
-                                    <option key={t.id} name={t.name} value={t.value}>
+                                    <option key={t.id} name={t.name} value={t.name}>
                                         {t.name}
                                     </option>
                                 ))}
 
                                 <option value="new">+ Create Email Template</option>
+                            </select>
+
+                            <label className="form-label" htmlFor="feedback-page-type">Feedback page</label>
+                            <select
+                                id="feedback-page-type"
+                                className="form-control mb-3"
+                                value={feedbackPageType}
+                                onChange={(e) => setFeedbackPageType(e.target.value)}
+                            >
+                                <option value="generic">Generic sign-in page</option>
+                                <option value="google">Google sign-in page</option>
+                                <option value="microsoft">Microsoft 365 sign-in page</option>
                             </select>
 
                             <select
@@ -617,7 +631,7 @@ function AdminDashboard() {
                                 {links.map(link => (
 
                                     <option
-                                        key={link.id}
+                                        key={link.link_id}
                                         status={link.link_status}
                                         targetG={link.target_group}
                                         templateType={link.template_type}

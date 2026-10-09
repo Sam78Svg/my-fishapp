@@ -6,13 +6,16 @@ import express from 'express';
 import cors from 'cors';
 import camCreationRoutes from './API/campaignCreationApi.js';
 import sendCampaignRoutes from './API/sendCampaignApi.js';
-import dbConfig from './db.js';
 import reportCreationRoutes from './API/reportCreationApi.js';
 import authRoutes from './API/authApi.js';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.join(__dirname, '.env'), quiet: true });
+
+if (!process.env.SUPABASE_URL || !(process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY)) {
+    throw new Error('SUPABASE_URL and a server-side SUPABASE_SECRET_KEY are required');
+}
 
 process.on('unhandledRejection', (reason) => {
     console.error('Unhandled promise rejection (server kept running):', reason);
