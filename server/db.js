@@ -38,8 +38,4 @@ if (process.env.NODE_ENV === "test") {
     });
 }
 
-console.log("DB_HOST:", process.env.NODE_ENV === "test" ? process.env.DB_HOST_TEST || 'localhost' : process.env.DB_HOST);
-console.log("DB_USER:", process.env.DB_USER);
-console.log("DB_NAME:", process.env.NODE_ENV === "test" ? process.env.DB_NAME_TEST : process.env.DB_NAME);
-
 export default pool.promise();

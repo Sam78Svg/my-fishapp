@@ -1,7 +1,11 @@
 import express from 'express';
 import dbConfig from '../db.js';
 import bcrypt from 'bcryptjs';
+import { createAuthToken, authenticate, requireRole } from '../utils/auth.js';
 const router = express.Router();
+
+// Employee provisioning is an administrative operation.
+router.use('/signup', authenticate, requireRole('admin'));
 
 // Signup endpoint (updated with employee password)
 router.post('/signup', async (req, res) => {
@@ -10,8 +14,8 @@ router.post('/signup', async (req, res) => {
     try {
         // ================= EMPLOYEE =================
         if (type === "employee") {
-            console.log(req.body.name, "\n", req.body);
-            const { name, department, designation, email, joining_date, password, company_name } = req.body;
+            const { name, department, designation, email, joining_date, password } = req.body;
+            const company_name = req.auth.company_name;
 
             if (!name || !email || !password)
                 return res.json({ success: false, message: "Name, email & password required" });
@@ -63,7 +67,6 @@ router.post('/login', async (req, res) => {
         if (admins.length > 0) {
 
             const admin = admins[0];
-            console.log("Admin found:", admin);
 
             const adminMatch = await bcrypt.compare(
                 password,
@@ -76,7 +79,8 @@ router.post('/login', async (req, res) => {
                     type: "admin",
                     username: admin.username,
                     role: admin.role,
-                    company_name: admin.company_name
+                    company_name: admin.company_name,
+                    token: createAuthToken({ type: 'admin', username: admin.username, company_name: admin.company_name })
                 });
             }
             else {
@@ -94,7 +98,6 @@ router.post('/login', async (req, res) => {
         );
 
         if (employees.length === 0) {
-            console.log("Employee not found");
             return res.json({
                 success: false,
                 message: "Invalid credentials"
@@ -102,7 +105,6 @@ router.post('/login', async (req, res) => {
         }
 
         const employee = employees[0];
-        console.log("Employee found:", employee);
         const employeeMatch = await bcrypt.compare(
             password,
             employee.password
@@ -122,7 +124,8 @@ router.post('/login', async (req, res) => {
             email: employee.email,
             department: employee.department,
             designation: employee.designation,
-            company_name: employee.company_name
+            company_name: employee.company_name,
+            token: createAuthToken({ type: 'employee', name: employee.name, company_name: employee.company_name })
         });
 
     } catch (err) {

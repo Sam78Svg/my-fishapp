@@ -19,11 +19,6 @@ function LoginPage() {
     const [error, setError] = useState("");
     const navigate = useNavigate();
 
-    //user store logic
-    localStorage.setItem("user", JSON.stringify({
-        name: loginUsername
-    }));
-
     // Handle login form submit
     const handleLogin = async (e) => {
         e.preventDefault();

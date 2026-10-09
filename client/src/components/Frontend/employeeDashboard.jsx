@@ -8,6 +8,8 @@ import {
     BsEnvelopePaper,
     BsEnvelopeOpen,
 } from "react-icons/bs";
+import { apiFetch } from "../../api.js";
+import { sanitizeHtml } from "../../safeHtml.js";
 
 function EmployeeDashboard() {
 
@@ -25,7 +27,7 @@ function EmployeeDashboard() {
 
     const fetchCount = async (username) => {
 
-        fetch(`${import.meta.env.VITE_API_URL}/api/capturedUser`, {
+        apiFetch(`${import.meta.env.VITE_API_URL}/api/capturedUser`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -41,7 +43,7 @@ function EmployeeDashboard() {
 
     const fetchUser = async (username) => {
 
-        fetch(`${import.meta.env.VITE_API_URL}/api/userExist`, {
+        apiFetch(`${import.meta.env.VITE_API_URL}/api/userExist`, {
 
             method: "POST",
 
@@ -66,7 +68,7 @@ function EmployeeDashboard() {
     const fetchUserEmails = async () => {
         if (!user?.name) return;
 
-        fetch(`${import.meta.env.VITE_API_URL}/api/fetchEmail`, {
+        apiFetch(`${import.meta.env.VITE_API_URL}/api/fetchEmail`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -465,7 +467,7 @@ function EmployeeDashboard() {
                                                     className="mail-content"
                                                     dangerouslySetInnerHTML={{
                                                         __html:
-                                                            mails[selectedMail].message
+                                                            sanitizeHtml(mails[selectedMail].message)
                                                     }}
                                                 />
                                             </div>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import '../Styling/adminDashboard.css';
 import { Editor, EditorProvider } from "react-simple-wysiwyg";
+import { apiFetch } from "../../api.js";
 
 function AdminDashboard() {
 
@@ -48,7 +49,7 @@ function AdminDashboard() {
     const [user, setUser] = useState([]);
 
     useEffect(() => {
-        fetch(`${import.meta.env.VITE_API_URL}/api/target-groups`)
+        apiFetch(`${import.meta.env.VITE_API_URL}/api/target-groups`)
             .then(res => res.json())
             .then(data => {
                 setTargetGroups(data);
@@ -66,7 +67,7 @@ function AdminDashboard() {
             const parsedUser = JSON.parse(storedUser);
             setUser(parsedUser);
 
-            fetch(`${import.meta.env.VITE_API_URL}/api/userExist`, {
+            apiFetch(`${import.meta.env.VITE_API_URL}/api/userExist`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -88,7 +89,7 @@ function AdminDashboard() {
 
         console.log("SELECTED GROUP:", selectedGroup);
         console.log("PAGINATION DEBUG: Fetching recipients with", { selectedGroup, page, limit, userCompany: user?.company_name });
-        fetch(
+        apiFetch(
             `${import.meta.env.VITE_API_URL}/api/recipients?group=${encodeURIComponent(selectedGroup)}&company=${encodeURIComponent(user?.company_name || "")}&page=${page}&limit=${limit}`
         )
             .then(res => res.json())
@@ -111,7 +112,7 @@ function AdminDashboard() {
     }, []);
 
     const fetchTemplates = async () => {
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/templates`);
+        const res = await apiFetch(`${import.meta.env.VITE_API_URL}/api/templates`);
         const data = await res.json();
         setTemplates(data);
     };
@@ -122,7 +123,7 @@ function AdminDashboard() {
             return alert("Fill all fields");
 
         if (editingTemplate) {
-            await fetch(`${import.meta.env.VITE_API_URL}/api/templates/${editingTemplate.id}`, {
+            await apiFetch(`${import.meta.env.VITE_API_URL}/api/templates/${editingTemplate.id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -131,7 +132,7 @@ function AdminDashboard() {
                 })
             });
         } else {
-            await fetch(`${import.meta.env.VITE_API_URL}/api/templates`, {
+            await apiFetch(`${import.meta.env.VITE_API_URL}/api/templates`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -150,7 +151,7 @@ function AdminDashboard() {
 
     // ================= DELETE TEMPLATE =================
     const handleDeleteTemplate = async (id) => {
-        await fetch(`${import.meta.env.VITE_API_URL}/api/templates/${id}`, {
+        await apiFetch(`${import.meta.env.VITE_API_URL}/api/templates/${id}`, {
             method: "DELETE"
         });
         fetchTemplates();
@@ -160,12 +161,9 @@ function AdminDashboard() {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // Create unique link FIRST
-        const generatedLink = `${import.meta.env.VITE_LOCAL_API_URL}/feedback/${Date.now()}`;
-
         try {
             // Save campaign
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/save_campaign`, {
+            const response = await apiFetch(`${import.meta.env.VITE_API_URL}/api/save_campaign`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -182,8 +180,10 @@ function AdminDashboard() {
                 return alert(data.message || "Failed to save campaign");
             }
 
+            const generatedLink = `${import.meta.env.VITE_LOCAL_API_URL}/feedback/${data.campaign_id}`;
+
             //Save link ONLY if campaign saved
-            const savedLinkRes = await fetch(`${import.meta.env.VITE_API_URL}/api/saveLink`, {
+            const savedLinkRes = await apiFetch(`${import.meta.env.VITE_API_URL}/api/saveLink`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -219,7 +219,7 @@ function AdminDashboard() {
             return alert("No recipients");
         }
 
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/send_campaign`, {
+        const res = await apiFetch(`${import.meta.env.VITE_API_URL}/api/send_campaign`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -241,7 +241,7 @@ function AdminDashboard() {
     }, [activeTab]);
 
     const fetchReports = async () => {
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/reports`);
+        const res = await apiFetch(`${import.meta.env.VITE_API_URL}/api/reports`);
         const data = await res.json();
         setReports(Array.isArray(data.data) ? data.data : []);
     };
@@ -250,7 +250,7 @@ function AdminDashboard() {
             return;
         }
         try {
-            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/clear_reports`, {
+            const res = await apiFetch(`${import.meta.env.VITE_API_URL}/api/clear_reports`, {
                 method: "DELETE"
             });
             if (!res.ok) {
@@ -284,7 +284,7 @@ function AdminDashboard() {
     };
     // ================= Fetch Links =================
     const fetchLinks = async () => {
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/links`);
+        const res = await apiFetch(`${import.meta.env.VITE_API_URL}/api/links`);
         const data = await res.json();
         setLinks(data);
     };
@@ -306,7 +306,7 @@ function AdminDashboard() {
 
         try {
 
-            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/signup`, {
+            const res = await apiFetch(`${import.meta.env.VITE_API_URL}/api/auth/signup`, {
 
                 method: "POST",
 
@@ -348,7 +348,7 @@ function AdminDashboard() {
                 password: ""
             });
 
-            fetch(
+            apiFetch(
                 `${import.meta.env.VITE_API_URL}/api/recipients?group=${encodeURIComponent(employeeData.department)}&company=${encodeURIComponent(user?.company_name || "")}&page=${page}&limit=${limit}`
             )
                 .then(res => res.json())

@@ -1,10 +1,12 @@
 import React, { useState } from "react";
+import { useParams } from "react-router-dom";
 import '../Styling/login.css';
 
 function FeedBack() {
     const [breached, setBreached] = useState(false);
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
+    const { id: campaignId } = useParams();
 
 
     const handleSubmit = async (e) => {
@@ -16,7 +18,7 @@ function FeedBack() {
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({ username, password }),
+            body: JSON.stringify({ username, campaignId }),
         });
     };
 

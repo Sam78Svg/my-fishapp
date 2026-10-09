@@ -19,7 +19,8 @@ process.on('unhandledRejection', (reason) => {
 });
 
 process.on('uncaughtException', (err) => {
-    console.error('Uncaught exception (server kept running):', err);
+    console.error('Uncaught exception; shutting down:', err);
+    process.exit(1);
 });
 
 //MiddleWares

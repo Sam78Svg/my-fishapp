@@ -189,21 +189,26 @@ npm install
 Create a `.env` file inside the `server` directory:
 
 ```env
-DATABASE_HOST=
-DATABASE_USER=
-DATABASE_PASSWORD=
-DATABASE_NAME=
+DB_HOST=
+DB_USER=
+DB_PASSWORD=
+DB_NAME=
 
-JWT_SECRET=
+AUTH_TOKEN_SECRET=replace-with-a-long-random-secret
 
-NODEMAILER_EMAIL=
-NODEMAILER_PASSWORD=
+EMAIL_USER=
+EMAIL_PASS=
 
-TWILIO_ACCOUNT_SID=
+TWILIO_SID=
 TWILIO_AUTH_TOKEN=
+TWILIO_PHONE_NUMBER=
 
-GOOGLE_API_KEY=
+GEMINI_API_KEY=
 ```
+
+Set `AUTH_TOKEN_SECRET` to a cryptographically random value in production and keep it stable across server instances. The API issues eight-hour bearer tokens after login; campaign and account-management endpoints require those tokens.
+
+Before deploying this version, run [`server/migrations/001_add_company_scope.sql`](server/migrations/001_add_company_scope.sql) once against the application database. It adds company ownership to campaigns, templates, links, and tracking, and backfills legacy records only when their company can be determined unambiguously.
 
 ---
 

@@ -1,20 +1,29 @@
 import express from 'express';
 import dbConfig from '../db.js';
 import { sendEmail, sendSMS } from '../utils/messaging.js';
+import { authenticate, requireRole } from '../utils/auth.js';
 const router = express.Router();
 
 // ================= CAMPAIGN SENDING API =================
 
 // Endpoint to send campaign link to emails or phone numbers
-router.post('/send_campaign', async (req, res) => {
+router.post('/send_campaign', authenticate, requireRole('admin'), async (req, res) => {
     const { mode, recipients, link } = req.body;
-    console.log("MODE:", mode);
-    console.log("RECIPIENTS:", recipients);
-    console.log("LINK:", link);
-    if (!mode || !recipients || !Array.isArray(recipients) || recipients.length === 0 || !link) {
+    if (!['email', 'sms'].includes(mode) || !Array.isArray(recipients) || recipients.length === 0 || recipients.length > 100 || !recipients.every((recipient) => typeof recipient === 'string' && recipient.length <= 320) || typeof link !== 'string' || link.length > 2048 || !link) {
         return res.status(400).json({ message: 'Mode, recipients, and link are required.' });
     }
     try {
+        if (mode === 'email') {
+            const placeholders = recipients.map(() => '?').join(',');
+            const [allowedRecipients] = await dbConfig.execute(
+                `SELECT email FROM users WHERE company_name = ? AND email IN (${placeholders})`,
+                [req.auth.company_name, ...recipients]
+            );
+            const allowed = new Set(allowedRecipients.map((row) => row.email.toLowerCase()));
+            if (recipients.some((recipient) => typeof recipient !== 'string' || !allowed.has(recipient.toLowerCase()))) {
+                return res.status(403).json({ message: 'Campaign emails can only be sent to employees in your company' });
+            }
+        }
         if (mode === 'sms') {
             await sendSMS(recipients, link);
         } else {
@@ -27,22 +36,19 @@ router.post('/send_campaign', async (req, res) => {
     }
 });
 
-router.get('/recipients', async (req, res) => {
-    let { group, company, page = 1, limit } = req.query;
-    console.log("COMPANY:", company);
-    console.log("GROUP:", group);
-
-    console.log("FETCH RECIPIENTS:", { group, page, limit });
+router.get('/recipients', authenticate, requireRole('admin'), async (req, res) => {
+    let { group, page = 1, limit } = req.query;
+    const company = req.auth.company_name;
 
     // 🔥 Convert EVERYTHING to proper types
-    page = parseInt(page);
-    limit = parseInt(limit);
+    page = Number(page);
+    limit = Number(limit);
 
     if (!group) {
         return res.status(400).json({ message: "Group is required" });
     }
 
-    if (isNaN(page) || isNaN(limit)) {
+    if (!Number.isInteger(page) || page < 1 || !Number.isInteger(limit) || limit < 1 || limit > 100 || !company) {
         return res.status(400).json({ message: "Invalid pagination values" });
     }
 
@@ -60,10 +66,10 @@ router.get('/recipients', async (req, res) => {
             FROM users 
             WHERE department = ? 
             AND company_name = ?
-            LIMIT ${limit} OFFSET ${offset}
+            LIMIT ? OFFSET ?
         `;
 
-        const [showData] = await dbConfig.execute(query, [group, company]);
+        const [showData] = await dbConfig.execute(query, [group, company, limit, offset]);
 
         res.json({
             data: showData,
@@ -77,14 +83,16 @@ router.get('/recipients', async (req, res) => {
 });
 
 // Endpoint to captured users
-router.post('/capturedUser', async (req, res) => {
+router.post('/capturedUser', authenticate, requireRole('employee'), async (req, res) => {
     const { username } = req.body;
-    console.log("CAPTURED USER:", { username });
+    if (typeof username !== 'string' || username.toLowerCase() !== req.auth.sub.toLowerCase()) {
+        return res.status(403).json({ message: 'You can only access your own tracking data' });
+    }
 
     try {
         const userCount = await dbConfig.execute(
-            `select count(*) from tracking where username=?`,
-            [username]
+            `select count(*) from tracking where username=? AND company_name=?`,
+            [username, req.auth.company_name]
         );
         res.json({ userCount: userCount[0][0]['count(*)'] });
     } catch (err) {
@@ -93,14 +101,17 @@ router.post('/capturedUser', async (req, res) => {
     }
 });
 //fetch email for emaployee
-router.post('/fetchEmail', async (req, res) => {
+router.post('/fetchEmail', authenticate, requireRole('employee'), async (req, res) => {
     const { name } = req.body;
+    if (typeof name !== 'string' || name.toLowerCase() !== req.auth.sub.toLowerCase()) {
+        return res.status(403).json({ message: 'You can only access your own messages' });
+    }
 
     try {
         // ✅ Get user
         const [userData] = await dbConfig.execute(
-            "SELECT * FROM users WHERE name = ?",
-            [name]
+            "SELECT * FROM users WHERE LOWER(name) = LOWER(?) AND company_name = ?",
+            [name, req.auth.company_name]
         );
 
         if (userData.length === 0) {
@@ -111,8 +122,8 @@ router.post('/fetchEmail', async (req, res) => {
 
         // ✅ Get campaigns for user's department
         const [campaigns] = await dbConfig.execute(
-            "SELECT * FROM campaigns WHERE target_group = ? ORDER BY created_at DESC",
-            [user.department]
+            "SELECT * FROM campaigns WHERE target_group = ? AND company_name = ? ORDER BY created_at DESC",
+            [user.department, user.company_name]
         );
 
         let mails = [];
@@ -121,8 +132,8 @@ router.post('/fetchEmail', async (req, res) => {
 
             // ✅ Get template content
             const [templateData] = await dbConfig.execute(
-                "SELECT content FROM templates WHERE name = ?",
-                [campaign.template_type]
+                "SELECT content FROM templates WHERE name = ? AND company_name = ?",
+                [campaign.template_type, user.company_name]
             );
 
             if (templateData.length === 0) continue;
@@ -131,16 +142,15 @@ router.post('/fetchEmail', async (req, res) => {
 
             // ✅ Get link
             const [linkData] = await dbConfig.execute(
-                "SELECT * FROM links WHERE target_group = ? LIMIT 1",
-                [user.department]
+                "SELECT * FROM links WHERE target_group = ? AND template_type = ? AND company_name = ? ORDER BY id DESC LIMIT 1",
+                [user.department, campaign.template_type, user.company_name]
             );
 
             const [linkCount] = await dbConfig.execute(
-                "SELECT COUNT(*) as total FROM tracking WHERE username = ?",
-                [user.name]
+                "SELECT COUNT(*) as total FROM tracking WHERE username = ? AND company_name = ?",
+                [user.name, user.company_name]
             );
             const senderEmail = "admin@COMPANY.COM";
-            console.log(linkData);
             const linkDes = linkData.length ? linkData[0].link_desc : "#";
             const converLink = `<a href="${linkDes}">${linkDes}</a>`;
             // ✅ Replace variables
